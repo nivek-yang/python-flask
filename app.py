@@ -26,8 +26,8 @@ def create_item():
     if item_data["store_id"] not in stores:
         return {"message": "Store not found"}, 404
     item_id = uuid.uuid4().hex
-    item = {**item_data, "id": item_id}
-    return item, 201
+    items[item_id] = {**item_data, "id": item_id}
+    return items[item_id], 201
 
 @app.get("/store/<string:store_id>")
 def get_store(store_id):
