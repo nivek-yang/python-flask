@@ -14,7 +14,7 @@ blp = Blueprint("items", __name__, description="Operations on items")
 class ItemList(MethodView):
     @blp.response(200, ItemSchema(many=True)) # turn into list of object
     def get(self):
-        return items.values
+        return ItemModel.query.all()
     
     @blp.arguments(ItemSchema)
     @blp.response(201, ItemSchema)
