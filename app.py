@@ -2,6 +2,7 @@ import os
 
 from flask import Flask
 from flask_smorest import Api
+from flask_jwt_extended import JWTManager
 
 from db import db
 import models
@@ -25,6 +26,9 @@ def create_app(db_url=None):
     db.init_app(app)
 
     api = Api(app)
+
+    app.config["JWT_SECRET_KEY"] = "my_secret" # need to move to .env
+    jwt = JWTManager(app)
 
     with app.app_context():
         db.create_all()

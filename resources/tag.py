@@ -78,7 +78,7 @@ class LinkTagsToItem(MethodView):
             abort(500, message="An error occured while inserting the tag to item.")
     
     # NOTE: FIXME
-    @blp.response(200, TagSchema)
+    @blp.response(200, TagAndItemSchema)
     def delete(self, item_id, tag_id):
         item = ItemModel.query.get_or_404(item_id)
         tag = TagModel.query.get_or_404(tag_id)
@@ -89,7 +89,7 @@ class LinkTagsToItem(MethodView):
         item.tags.remove(tag)
 
         try:
-            # db.session.add(item)
+            db.session.add(item)
             db.session.commit()
         except SQLAlchemyError as e:
             logging.error(f"Error adding tag to item: {e}")
