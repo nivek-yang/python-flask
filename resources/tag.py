@@ -9,7 +9,7 @@ from schemas import TagSchema, TagAndItemSchema
 import logging
 blp = Blueprint("Tags", "tags", description="Operations in tags")
 
-@blp.route("/store/<string:store_id>/tag")
+@blp.route("/store/<int:store_id>/tag")
 class TagsInStore(MethodView):
     @blp.response(200, TagSchema(many=True)) # list of tags
     def get(self, store_id):
@@ -33,7 +33,7 @@ class TagsInStore(MethodView):
 
         return tag
     
-@blp.route("/tag/<string:tag_id>")
+@blp.route("/tag/<int:tag_id>")
 class Tag(MethodView):
     @blp.response(200, TagSchema)
     def get(self, tag_id):
@@ -62,7 +62,7 @@ class Tag(MethodView):
             message="Could not delete tag. Make sure tag is not associated with any items, then try again."
         )
     
-@blp.route("/item/<string:item_id>/tag/<string:tag_id>")
+@blp.route("/item/<int:item_id>/tag/<int:tag_id>")
 class LinkTagsToItem(MethodView):
     @blp.response(201, TagSchema)
     def post(self, item_id, tag_id):
@@ -78,7 +78,7 @@ class LinkTagsToItem(MethodView):
             abort(500, message="An error occured while inserting the tag to item.")
     
     # NOTE: FIXME
-    @blp.response(200, TagSchema)
+    @blp.response(200, TagAndItemSchema)
     def delete(self, item_id, tag_id):
         item = ItemModel.query.get_or_404(item_id)
         tag = TagModel.query.get_or_404(tag_id)
@@ -89,7 +89,7 @@ class LinkTagsToItem(MethodView):
         item.tags.remove(tag)
 
         try:
-            # db.session.add(item)
+            db.session.add(item)
             db.session.commit()
         except SQLAlchemyError as e:
             logging.error(f"Error adding tag to item: {e}")
