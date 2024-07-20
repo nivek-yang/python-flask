@@ -11,7 +11,7 @@ services:
     env_file:
       - ./.env
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db/myapp
+      - DATABASE_URL=postgresql://postgres:password@db:5432/myapp
 
   db:
     image: postgres

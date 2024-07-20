@@ -4,38 +4,55 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from passlib.hash import pbkdf2_sha256
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required, get_jwt
-
+from sqlalchemy import or_
 from db import db
 from blocklist import BLOCKLIST
 from models import UserModel
-from schemas import UserSchema
+from schemas import UserSchema, UserRegisterSchema
 
 blp = Blueprint("Users", "users", description="Operations on users")
 
 def send_simple_message(to, subject, body):
     domain = os.getenv("MAILGUN_DOMAIN")
-  	return requests.post(
-  		f"https://api.mailgun.net/v3/{domain}/messages",
-  		auth=("api", os.getenv("MAILGUN_API_KEY")),
-  		data={"from": "Yang <mailgun@{domain}}>",
-  			"to": [to],
-  			"subject": subject,
-  			"text": body})
+    response = requests.post(
+        f"https://api.mailgun.net/v3/{domain}/messages",
+        auth=("api", os.getenv("MAILGUN_API_KEY")),
+        data={
+            "from": f"Yang <mailgun@{domain}>",
+            "to": [to],
+            "subject": subject,
+            "text": body
+        }
+    )
+    print("Mailgun response:", response.status_code, response.text)  # logger
+    return response
 
 @blp.route("/register")
 class UserRegister(MethodView):
-    @blp.arguments(UserSchema)
+    @blp.arguments(UserRegisterSchema)
     def post(self, user_data):
-        if UserModel.query.filter(UserModel.name == user_data["name"]).first():
-            abort(409, message="A user with that name already exists.")
+        if UserModel.query.filter(
+            or_(
+                UserModel.name == user_data["name"],
+                UserModel.email == user_data["email"]
+                )
+            ).first():
+                abort(409, message="A user with that name or email already exists.")
         
         user = UserModel(
             name = user_data["name"],
+            email = user_data["email"],
             password = pbkdf2_sha256.hash(user_data["password"])
         )
 
         db.session.add(user)
         db.session.commit()
+
+        send_simple_message(
+            to=user.email,
+            subject="Successfully signed up",
+            body=f"Hi {user.name}! You have successfully signed up to the Store REST API."
+        )
 
         return {"message": "User created succeessfully."}, 201
 
