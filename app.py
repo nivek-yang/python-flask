@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 import os
 
 from flask import Flask, jsonify
@@ -14,6 +15,8 @@ from resources.store import blp as StoreBlueprint
 from resources.tag import blp as TagBlueprint
 from resources.user import blp as UserBlueprint
 
+load_dotenv()
+
 def create_app(db_url=None):
     app = Flask(__name__)
 
@@ -25,6 +28,7 @@ def create_app(db_url=None):
     app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
     app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL", "sqlite:///data.db")
+    # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
     migrate = Migrate(app, db)
@@ -88,8 +92,8 @@ def create_app(db_url=None):
         ), 401,
         )
 
-    # with app.app_context():  # Remove while using Flask-Migrate to create Database
-    #     db.create_all()
+    with app.app_context():  # Remove while using Flask-Migrate to create Database
+        db.create_all()
 
     api.register_blueprint(ItemBlueprint)
     api.register_blueprint(StoreBlueprint)
